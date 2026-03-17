@@ -19,13 +19,13 @@ wc -c ~/.openclaw/workspace-<profile>/*.md
 
 **Thresholds:**
 
-| Size | Status |
-|------|--------|
-| Under 5,000 chars | Healthy |
-| 5,000–10,000 chars | Acceptable; monitor for growth |
-| 10,000–15,000 chars | Review for trimming opportunities |
-| Over 15,000 chars | Needs optimization |
-| Over 20,000 chars | Will be truncated by OpenClaw — fix immediately |
+| Size                | Status                                          |
+| ------------------- | ----------------------------------------------- |
+| Under 5,000 chars   | Healthy                                         |
+| 5,000–10,000 chars  | Acceptable; monitor for growth                  |
+| 10,000–15,000 chars | Review for trimming opportunities               |
+| Over 15,000 chars   | Needs optimization                              |
+| Over 20,000 chars   | Will be truncated by OpenClaw — fix immediately |
 
 ---
 
@@ -34,17 +34,20 @@ wc -c ~/.openclaw/workspace-<profile>/*.md
 The `docs/` directory holds content that is referenced on demand — not loaded on every turn. Moving content there is the primary lever for reducing per-turn token cost.
 
 **Move to `docs/` when:**
+
 - Content is only needed for specific operation types (e.g., detailed channel configuration steps)
 - Content is reference material that an agent looks up, not memorizes
 - Content is long narrative explanation rather than rules or facts
 - Content is specific to past tasks or historical context
 
 **Keep in workspace files when:**
+
 - Content affects every turn (persona, safety rules, checklist table)
 - Content is short enough not to matter (< 200 chars)
 - Content must be in context before the agent even receives a message (boot sequence files)
 
 **Examples:**
+
 - `docs/agent-rules-detail.md` — long explanations of group chat behavior, heartbeat policies
 - `docs/ssh-reference.md` — full SSH setup guide (TOOLS.md keeps only the hostname)
 - `docs/channel-setup.md` — channel configuration details (AGENTS.md just references it)
@@ -68,33 +71,34 @@ Checklists are the canonical example of "reference on demand":
 
 Common sources of redundancy to check:
 
-| Source A | Source B | What to check |
-|----------|----------|---------------|
-| SOUL.md (values) | AGENTS.md (rules) | Safety rules in both? Keep in AGENTS.md, remove from SOUL.md |
-| TOOLS.md | MEMORY.md | Same tool note or SSH host in both? Keep in TOOLS.md |
-| MEMORY.md | Skill SKILL.md | Same rule in both? Move stable rules to SKILL.md, remove from MEMORY.md |
-| AGENTS.md | docs/ file | Detailed explanation inline AND in docs? Remove inline |
-| USER.md | SOUL.md | User preferences duplicated? Keep in USER.md only |
+| Source A         | Source B          | What to check                                                           |
+| ---------------- | ----------------- | ----------------------------------------------------------------------- |
+| SOUL.md (values) | AGENTS.md (rules) | Safety rules in both? Keep in AGENTS.md, remove from SOUL.md            |
+| TOOLS.md         | MEMORY.md         | Same tool note or SSH host in both? Keep in TOOLS.md                    |
+| MEMORY.md        | Skill SKILL.md    | Same rule in both? Move stable rules to SKILL.md, remove from MEMORY.md |
+| AGENTS.md        | docs/ file        | Detailed explanation inline AND in docs? Remove inline                  |
+| USER.md          | SOUL.md           | User preferences duplicated? Keep in USER.md only                       |
 
 ---
 
 ## Memory Distillation: Heartbeat vs Manual
 
-官方推荐优先用 **heartbeat** 完成记忆精炼，而非纯手动触发。
+The official recommendation is to prioritize using **heartbeat** for memory refinement, rather than purely manual triggering.
 
-### 在 Heartbeat 中自动精炼（推荐）
+### Automatic Refinement in Heartbeat (Recommended)
 
-在 HEARTBEAT.md 里加入定期精炼任务：
+Add regular refinement tasks to HEARTBEAT.md:
 
 ```markdown
 ## Memory Maintenance (every few days)
+
 1. Read recent memory/YYYY-MM-DD.md files
 2. Identify significant events, lessons, insights worth keeping long-term
 3. Update MEMORY.md with distilled learnings
 4. Remove outdated entries from MEMORY.md
 ```
 
-配合 `memory/heartbeat-state.json` 记录上次精炼时间：
+In conjunction with `memory/heartbeat-state.json`, the last refinement time is recorded:
 
 ```json
 {
@@ -106,7 +110,7 @@ Common sources of redundancy to check:
 }
 ```
 
-### 手动精炼流程
+### Manual Refining Process
 
 Run this monthly (or when MEMORY.md exceeds 10,000 chars):
 
@@ -117,6 +121,7 @@ ls ~/.openclaw/workspace/memory/ | sort
 ```
 
 Read logs from the past 30 days. Look for:
+
 - Rules the agent had to re-learn (same mistake appears multiple times)
 - Hard-won environment facts that aren't in any skill doc
 - Decisions that always get made the same way (good candidates for iron laws)
@@ -124,12 +129,14 @@ Read logs from the past 30 days. Look for:
 ### Step 2: Promote to MEMORY.md
 
 For each candidate:
+
 1. Check if the rule is already in MEMORY.md (avoid duplicates)
 2. Check if the rule belongs in a skill SKILL.md instead (prefer skill docs for tool-specific rules)
 3. Write in iron-law format: short, action-oriented, unambiguous
 
 **Iron law format:**
-```
+
+```markdown
 N. **Rule name (category)**: One-sentence rule. Context if needed in same sentence.
 ```
 
@@ -142,6 +149,7 @@ find ~/.openclaw/workspace/memory -name "*.md" -mtime +30 -exec mv {} ~/.opencla
 ```
 
 Or simply delete them if they've been distilled:
+
 ```bash
 find ~/.openclaw/workspace/memory -name "2025-*.md" -delete
 ```
@@ -149,6 +157,7 @@ find ~/.openclaw/workspace/memory -name "2025-*.md" -delete
 ### Step 4: Review MEMORY.md for demotion
 
 Check each rule in MEMORY.md:
+
 - Has this rule been incident-free for 3+ months? Consider moving to a skill SKILL.md (more appropriate home)
 - Is this rule covered by an existing skill doc now? Remove the duplicate
 - Is this rule about a task that's now complete? Delete it
@@ -160,18 +169,23 @@ Check each rule in MEMORY.md:
 TOOLS.md is loaded by sub-agents too — keep it tight.
 
 **Include:**
+
 ```markdown
 ## SSH
+
 - main-server: ssh charles@192.168.1.10
 
 ## TTS
+
 - Provider: Edge | Voice: zh-CN-XiaoxiaoNeural
 
 ## Cameras
+
 - Living room: node node-home, device camera-0
 ```
 
 **Do not include:**
+
 - General SSH usage (sub-agents know SSH)
 - TTS API docs (use skill docs)
 - Configuration history ("used to be X, now Y")
@@ -200,32 +214,33 @@ Target: Under 80,000 chars total for the regularly-loaded set. The 150,000 char 
 
 ## HEARTBEAT.md Optimization
 
-两个官方推荐的配置优化：
+Two officially recommended configuration optimizations:
 
-**1. 使用 `lightContext: true` 减少 token 消耗**
+**1. Use `lightContext: true` to reduce token consumption**
 
-在 `openclaw.json` 中为 heartbeat 开启精简模式：
+Enable simplified mode for heartbeat in `openclaw.json`:
+
 ```json5
 {
   agents: {
     defaults: {
       heartbeat: {
-        lightContext: true  // 最小化 bootstrap 注入
-      }
-    }
-  }
+        lightContext: true, // 最小化 bootstrap 注入
+      },
+    },
+  },
 }
 ```
 
-**2. OpenClaw 自动跳过空 HEARTBEAT.md**
+**2. OpenClaw Automatically Skips Empty HEARTBEAT.md**
 
-如果 HEARTBEAT.md 只包含空行和 Markdown 标题，OpenClaw 会自动跳过执行，节省 API 调用。所以保持文件简洁也有节省成本的效果。
+If HEARTBEAT.md only contains blank lines and Markdown headings, OpenClaw will automatically skip execution, saving API calls. Therefore, keeping files concise also saves costs.
 
 ---
 
-## Git 备份最佳实践
+## Git Backup Best Practices
 
-官方推荐用私有 Git 仓库备份工作区文件，方便跨机器迁移：
+The official recommendation is to use a private Git repository to back up working directory files for easy migration across machines:
 
 ```bash
 cd ~/.openclaw/workspace
@@ -233,24 +248,24 @@ git init
 git remote add origin <your-private-repo>
 ```
 
-**应该提交的文件：**
-```
+**Documents to be submitted:**
+
+```text
 AGENTS.md, SOUL.md, TOOLS.md, IDENTITY.md, USER.md, HEARTBEAT.md
 memory/YYYY-MM-DD.md
 checklists/
 docs/
 ```
 
-**绝对不要提交：**
-```
-secrets、.env 文件、.key/.pem 文件、credentials/
-任何包含 API key 或 token 的文件
-```
+**Never submit:**
 
-**迁移到新机器：**
+Text secrets, .env files, .key/.pem files, credentials/ files containing API keys or tokens
+
+**Migrate to a new machine:**
+
 ```bash
 git clone <repo> ~/.openclaw/workspace
-openclaw setup --workspace ~/.openclaw/workspace  # 补充缺失的模板文件
+openclaw setup --workspace ~/.openclaw/workspace  # Supplement missing template files
 ```
 
 ---

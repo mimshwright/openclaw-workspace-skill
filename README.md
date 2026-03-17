@@ -2,7 +2,7 @@
 
 A [Claude Code](https://claude.ai/claude-code) skill for maintaining and optimizing [OpenClaw](https://openclaw.ai) workspace files — the markdown files that form an AI agent's soul, memory, and operating procedures.
 
-[中文文档 →](README_CN.md)
+_This is a fork of [win4r/openclaw-workspace](https://github.com/win4r/openclaw-workspace). @mimshwright is not the original author and I can't vouch for the contents. See the [changelog](#changelog) at the bottom of this readme._
 
 ---
 
@@ -11,6 +11,7 @@ A [Claude Code](https://claude.ai/claude-code) skill for maintaining and optimiz
 OpenClaw is a self-hosted, multi-channel AI agent gateway (WhatsApp, Telegram, Discord, Slack, and more). Every OpenClaw agent has a **workspace** — a directory of markdown files that are injected into the system prompt on each turn, giving the agent its identity, behavioral rules, environmental knowledge, and long-term memory.
 
 These workspace files are powerful but require careful management:
+
 - **Too much content** wastes tokens on every single turn
 - **Redundancy** between files creates confusion and contradictions
 - **Stale content** (old SSH hosts, deprecated rules, finished tasks) silently degrades agent quality
@@ -22,27 +23,27 @@ This skill gives Claude Code the knowledge to audit, optimize, and build OpenCla
 
 ## Workspace Files Overview
 
-| File | Purpose | Loaded When | Visible to Sub-agents? |
-|------|---------|-------------|----------------------|
-| `AGENTS.md` | Boot sequence, checklists, behavioral rules | Every turn (all agents) | Yes |
-| `SOUL.md` | Persona, tone, values, continuity philosophy | Every turn (all agents) | Yes |
-| `TOOLS.md` | Env-specific notes (SSH, TTS, cameras, devices) | Every turn (main + sub-agents) | Yes |
-| `USER.md` | Human profile, preferences, relationship context | Every turn (main sessions only) | No |
-| `IDENTITY.md` | Name, emoji, avatar, self-description | Every turn | Yes |
-| `HEARTBEAT.md` | Periodic check tasks and health routines | Every heartbeat turn | Depends |
-| `BOOT.md` | Startup actions (`hooks.internal.enabled` required) | On gateway startup | No |
-| `BOOTSTRAP.md` | First-time onboarding script — delete after use | New workspaces only | No |
-| `MEMORY.md` | Long-term curated facts and iron-law rules | Main sessions only | **Never** |
-| `memory/YYYY-MM-DD.md` | Daily session logs | Per AGENTS.md boot sequence | No |
-| `checklists/*.md` | Step-by-step ops guides | On demand (referenced from AGENTS.md) | No |
+| File                   | Purpose                                             | Loaded When                           | Visible to Sub-agents? |
+| ---------------------- | --------------------------------------------------- | ------------------------------------- | ---------------------- |
+| `AGENTS.md`            | Boot sequence, checklists, behavioral rules         | Every turn (all agents)               | Yes                    |
+| `SOUL.md`              | Persona, tone, values, continuity philosophy        | Every turn (all agents)               | Yes                    |
+| `TOOLS.md`             | Env-specific notes (SSH, TTS, cameras, devices)     | Every turn (main + sub-agents)        | Yes                    |
+| `USER.md`              | Human profile, preferences, relationship context    | Every turn (main sessions only)       | No                     |
+| `IDENTITY.md`          | Name, emoji, avatar, self-description               | Every turn                            | Yes                    |
+| `HEARTBEAT.md`         | Periodic check tasks and health routines            | Every heartbeat turn                  | Depends                |
+| `BOOT.md`              | Startup actions (`hooks.internal.enabled` required) | On gateway startup                    | No                     |
+| `BOOTSTRAP.md`         | First-time onboarding script — delete after use     | New workspaces only                   | No                     |
+| `MEMORY.md`            | Long-term curated facts and iron-law rules          | Main sessions only                    | **Never**              |
+| `memory/YYYY-MM-DD.md` | Daily session logs                                  | Per AGENTS.md boot sequence           | No                     |
+| `checklists/*.md`      | Step-by-step ops guides                             | On demand (referenced from AGENTS.md) | No                     |
 
 ### Token Budget
 
-| Constraint | Limit |
-|-----------|-------|
-| Per file hard cap | 20,000 chars (truncated if exceeded) |
-| Total across all bootstrap files | ~150,000 chars |
-| Recommended target per file | 10,000–15,000 chars |
+| Constraint                       | Limit                                |
+| -------------------------------- | ------------------------------------ |
+| Per file hard cap                | 20,000 chars (truncated if exceeded) |
+| Total across all bootstrap files | ~150,000 chars                       |
+| Recommended target per file      | 10,000–15,000 chars                  |
 
 ### Security Rule
 
@@ -128,6 +129,7 @@ Claude Code will automatically detect and register the skill. It will appear in 
 ### Manual Installation
 
 Copy the skill directory anywhere Claude Code looks for skills:
+
 - `~/.claude/skills/openclaw-workspace/` (recommended)
 - Per-project: `.claude/skills/openclaw-workspace/`
 
@@ -144,35 +146,40 @@ Once installed, Claude Code will automatically invoke this skill when you:
 - "Audit my workspace files for redundancy"
 - "My MEMORY.md is getting too large, help me clean it up"
 
-You can also explicitly ask: *"Use the openclaw-workspace skill to..."*
+You can also explicitly ask: _"Use the openclaw-workspace skill to..."_
 
 ---
 
 ## Common Issues
 
 ### File exceeds token limit (> 20,000 chars)
+
 Move content to `docs/` (loaded on demand, not every turn). Keep only what needs to be in context on every single turn.
 
 ### MEMORY.md leaking to group chats
+
 Add explicit gating in AGENTS.md boot sequence: `"2. Main session only: Read MEMORY.md"`. Without this gate, the agent may load it in any context.
 
 ### Boot sequence not loading files
+
 The agent follows AGENTS.md boot sequence instructions — it won't auto-discover files. Make sure each file is explicitly named in the boot sequence.
 
 ### Workspace changes not taking effect
+
 Workspace files are read at session start. Start a new session or restart the gateway for changes to apply.
 
 ### MEMORY.md growing unbounded
+
 Run memory distillation monthly. Promote mature rules to skill `SKILL.md` files (more appropriate home for stable, tool-specific rules). Delete rules about completed tasks.
 
 ---
 
 ## File Reference
 
-| File | Description |
-|------|-------------|
-| [`SKILL.md`](SKILL.md) | Main skill — all workflows, common issues, workspace paths |
-| [`references/workspace-files.md`](references/workspace-files.md) | Deep-dive on every workspace file: purpose, design principles, anti-patterns, section structure |
+| File                                                                   | Description                                                                                      |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [`SKILL.md`](SKILL.md)                                                 | Main skill — all workflows, common issues, workspace paths                                       |
+| [`references/workspace-files.md`](references/workspace-files.md)       | Deep-dive on every workspace file: purpose, design principles, anti-patterns, section structure  |
 | [`references/optimization-guide.md`](references/optimization-guide.md) | Token efficiency strategies, audit commands, memory distillation process, redundancy audit table |
 
 ---
@@ -188,14 +195,8 @@ Run memory distillation monthly. Promote mature rules to skill `SKILL.md` files 
 
 MIT
 
-## Buy Me a Coffee
-[!["Buy Me A Coffee"](https://storage.ko-fi.com/cdn/kofi2.png?v=3)](https://ko-fi.com/aila)
+## Changelog
 
-## My WeChat Group and My WeChat QR Code
-
-<img src="https://github.com/win4r/AISuperDomain/assets/42172631/d6dcfd1a-60fa-4b6f-9d5e-1482150a7d95" width="186" height="300">
-<img src="https://github.com/win4r/AISuperDomain/assets/42172631/7568cf78-c8ba-4182-aa96-d524d903f2bc" width="214.8" height="291">
-<img src="https://github.com/win4r/AISuperDomain/assets/42172631/fefe535c-8153-4046-bfb4-e65eacbf7a33" width="207" height="281">
-
-
-
+- Removed all Chinese language.
+- Removed personal links to orignal author.
+- Markdown linting.
